@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive School Timetable</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>📅 School Daily Timetable</h1>
+            <p>Directly edit cells to change your schedule. Changes are saved automatically.</p>
+        </header>
+
+        <main>
+            <table id="timetable">
+                <thead>
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Subject / Activity</th>
+                        <th class="actions-col">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="timetable-body">
+                    <!-- Rows will be loaded from JS -->
+                </tbody>
+            </table>
+
+            <div class="controls">
+                <button id="add-row-btn" class="btn btn-primary">➕ Add New Slot</button>
+                <button id="reset-btn" class="btn btn-danger">🔄 Reset to Default</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

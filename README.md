@@ -84,4 +84,12 @@ Privacy isn't a feature; it's the foundation.
 
 ---
 
+## 🔝 Recent Improvements
+
+- **🧩 Plugin Manager UI**: A new dedicated interface for searching, enabling, and disabling project extensions on the fly (`src/ui/plugin_view.py`).
+- **☁️ GitHub Integration**: Seamlessly synchronize your local development projects with GitHub for version control and remote collaboration.
+- **🛠️ UI Refinements**: Continuous updates to the sidebar components, including enhanced AI and Git panel responsiveness.
+
+---
+
 *“Code at the speed of thought, with the security of a vault.”*

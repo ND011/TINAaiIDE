@@ -24,25 +24,34 @@ def run_indexer(directory):
     extensions = {".py", ".md", ".txt", ".js", ".html", ".css", ".json", ".bat", ".ps1"}
 
     print(f"🚀 Tina AI: Optimizing Index for {directory}")
-    indexed_count = 0
     
+    # --- PHASE 1: COUNT TOTAL FILES ---
+    all_files = []
     for root, dirs, files in os.walk(directory):
         # Prune excluded directories
         dirs[:] = [d for d in dirs if d not in excluded]
-        
         for file in files:
             if any(file.endswith(ext) for ext in extensions):
-                path = os.path.join(root, file)
-                try:
-                    with open(path, "r", encoding="utf-8") as f:
-                        content = f.read()
-                        if content.strip():
-                            # Re-index every file for now to ensure freshness
-                            engine.index_document(content, path, {"path": path})
-                            indexed_count += 1
-                            print(f" [+] INDEXED: {os.path.relpath(path, directory)}")
-                except Exception as e:
-                    print(f" [!] ERROR: {path} - {e}")
+                all_files.append(os.path.join(root, file))
+
+    total_files = len(all_files)
+    indexed_count = 0
+    
+    # --- PHASE 2: INDEX EACH FILE ---
+    for path in all_files:
+        try:
+            with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                content = f.read()
+                if content.strip():
+                    indexed_count += 1
+                    # Progress reporting for UI capture
+                    progress_pct = int((indexed_count / total_files) * 100)
+                    print(f"[{indexed_count}/{total_files}] ({progress_pct}%) INDEXING: {os.path.relpath(path, directory)}")
+                    
+                    # Pass file path to engine for metadata extraction (like extension)
+                    engine.index_document(content, path, {"path": path, "filename": os.path.basename(path)})
+        except Exception as e:
+            print(f" [!] ERROR: {path} - {e}")
 
     print(f"\n✅ Indexing Complete. Total files: {indexed_count}")
 

@@ -1,65 +1,69 @@
 import customtkinter as ctk
+import tkinter as tk
 
-class CommandPalette(ctk.CTkToplevel):
-    def __init__(self, master, commands=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.title("Command Palette")
-        self.geometry("600x400")
+class CommandPalette(tk.Toplevel):
+    def __init__(self, master, commands, **kwargs):
+        super().__init__(master)
+        self.master = master
+        self.commands = commands
+        self.commands_list = sorted(list(commands.keys()))
+        
+        # Window Setup
+        self.wm_overrideredirect(True)
         self.attributes("-topmost", True)
-        self.overrideredirect(True) # Borderless like VS Code
-
-        # Center on screen
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - 300
-        y = (screen_height // 2) - 200
-        self.geometry(f"600x400+{x}+{y}")
         
-        self.commands = commands or {}
-        self.filtered_keys = list(self.commands.keys())
-
-        # Main Design
-        self.configure(fg_color="#1e1e1e")
+        # Position at top center
+        w, h = 600, 400
+        x = master.winfo_rootx() + (master.winfo_width() // 2) - (w // 2)
+        y = master.winfo_rooty() + 50
+        self.geometry(f"{w}x{h}+{x}+{y}")
         
-        self.search_entry = ctk.CTkEntry(self, placeholder_text="Type a command...", height=40, font=ctk.CTkFont(size=16))
-        self.search_entry.pack(fill="x", padx=10, pady=10)
+        # Main Frame
+        self.main_frame = ctk.CTkFrame(self, fg_color="#252526", border_width=1, border_color="#3c3c3c", corner_radius=4)
+        self.main_frame.pack(fill="both", expand=True)
+        
+        # Search Entry
+        self.search_entry = ctk.CTkEntry(self.main_frame, placeholder_text="Type a command to run...", 
+                                        height=35, fg_color="#3c3c3c", border_width=0, corner_radius=0,
+                                        font=ctk.CTkFont(size=14))
+        self.search_entry.pack(fill="x", padx=10, pady=(10, 5))
         self.search_entry.bind("<KeyRelease>", self.filter_commands)
-        self.search_entry.bind("<Down>", self.focus_list)
+        self.search_entry.bind("<Return>", lambda e: self.execute_selected())
+        self.search_entry.bind("<Down>", lambda e: self.listbox.focus_set())
         self.search_entry.bind("<Escape>", lambda e: self.destroy())
-        self.search_entry.focus_set()
-
-        self.list_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
-        self.list_frame.pack(fill="both", expand=True, padx=5, pady=5)
         
-        self.refresh_list()
+        # Listbox
+        self.listbox = tk.Listbox(self.main_frame, bg="#252526", fg="#cccccc", 
+                                 font=ctk.CTkFont(size=13), borderwidth=0, highlightthickness=0,
+                                 selectbackground="#007acc", selectforeground="white",
+                                 activestyle="none")
+        self.listbox.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        self.listbox.bind("<Double-Button-1>", lambda e: self.execute_selected())
+        self.listbox.bind("<Return>", lambda e: self.execute_selected())
+        self.listbox.bind("<Escape>", lambda e: self.destroy())
+        
+        self.filter_commands()
+        self.search_entry.focus_set()
+        
+        # Close on focus out
+        self.bind("<FocusOut>", lambda e: self.destroy())
 
     def filter_commands(self, event=None):
         query = self.search_entry.get().lower()
-        self.filtered_keys = [k for k in self.commands.keys() if query in k.lower()]
-        self.refresh_list()
+        self.listbox.delete(0, "end")
+        for cmd in self.commands_list:
+            if query in cmd.lower():
+                self.listbox.insert("end", cmd)
+        if self.listbox.size() > 0:
+            self.listbox.selection_set(0)
 
-    def refresh_list(self):
-        for widget in self.list_frame.winfo_children():
-            widget.destroy()
-
-        for key in self.filtered_keys:
-            btn = ctk.CTkButton(
-                self.list_frame, 
-                text=key, 
-                anchor="w", 
-                fg_color="transparent",
-                hover_color="gray25",
-                height=35,
-                font=ctk.CTkFont(size=14),
-                command=lambda k=key: self.execute(k)
-            )
-            btn.pack(fill="x", pady=1)
-
-    def execute(self, key):
-        func = self.commands[key]
-        self.destroy()
-        if func: func()
-
-    def focus_list(self, event):
-        # We don't have true arrow navigation yet but we can click
-        pass
+    def execute_selected(self):
+        try:
+            selection = self.listbox.get(tk.ACTIVE)
+            if selection and selection in self.commands:
+                func = self.commands[selection]
+                if func:
+                    self.destroy()
+                    func()
+        except:
+            self.destroy()
